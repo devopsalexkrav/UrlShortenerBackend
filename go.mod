@@ -3,6 +3,7 @@ module urlShortener
 go 1.25.2
 
 require (
+	github.com/go-chi/chi/v5 v5.2.3
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	modernc.org/sqlite v1.42.2
 )
