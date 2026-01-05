@@ -22,6 +22,7 @@ func TestSaveHandler(t *testing.T) {
 		name       string
 		body       string
 		mockSetup  func(m *mocks.URLSaver)
+		wantCode   int
 		wantStatus string
 		wantError  string
 		wantAlias  string
@@ -32,6 +33,7 @@ func TestSaveHandler(t *testing.T) {
 			mockSetup: func(m *mocks.URLSaver) {
 				m.On("SaveURL", "https://google.com", "google").Return(int64(1), nil)
 			},
+			wantCode:   http.StatusOK,
 			wantStatus: "OK",
 			wantAlias:  "google",
 		},
@@ -41,6 +43,7 @@ func TestSaveHandler(t *testing.T) {
 			mockSetup: func(m *mocks.URLSaver) {
 				m.On("SaveURL", "https://google.com", mock.AnythingOfType("string")).Return(int64(1), nil)
 			},
+			wantCode:   http.StatusOK,
 			wantStatus: "OK",
 		},
 		{
@@ -49,6 +52,7 @@ func TestSaveHandler(t *testing.T) {
 			mockSetup: func(m *mocks.URLSaver) {
 				m.On("SaveURL", "https://google.com", "google").Return(int64(0), storage.ErrURLExists)
 			},
+			wantCode:   http.StatusConflict,
 			wantStatus: "Error",
 			wantError:  "url already exists",
 		},
@@ -58,6 +62,7 @@ func TestSaveHandler(t *testing.T) {
 			mockSetup: func(m *mocks.URLSaver) {
 				m.On("SaveURL", "https://google.com", "google").Return(int64(0), errors.New("unexpected error"))
 			},
+			wantCode:   http.StatusInternalServerError,
 			wantStatus: "Error",
 			wantError:  "failed to add url",
 		},
@@ -65,6 +70,7 @@ func TestSaveHandler(t *testing.T) {
 			name:       "invalid json",
 			body:       `{"url": "https://google.com"`,
 			mockSetup:  func(m *mocks.URLSaver) {},
+			wantCode:   http.StatusBadRequest,
 			wantStatus: "Error",
 			wantError:  "failed to decode request",
 		},
@@ -72,6 +78,7 @@ func TestSaveHandler(t *testing.T) {
 			name:       "empty url",
 			body:       `{"url": ""}`,
 			mockSetup:  func(m *mocks.URLSaver) {},
+			wantCode:   http.StatusBadRequest,
 			wantStatus: "Error",
 			wantError:  "field URL is a required field",
 		},
@@ -79,6 +86,7 @@ func TestSaveHandler(t *testing.T) {
 			name:       "invalid url format",
 			body:       `{"url": "not-a-url"}`,
 			mockSetup:  func(m *mocks.URLSaver) {},
+			wantCode:   http.StatusBadRequest,
 			wantStatus: "Error",
 			wantError:  "field URL is not a valid URL",
 		},
@@ -97,7 +105,7 @@ func TestSaveHandler(t *testing.T) {
 
 			handler(rec, req)
 
-			require.Equal(t, http.StatusOK, rec.Code)
+			require.Equal(t, tc.wantCode, rec.Code)
 
 			var resp Response
 			err := json.Unmarshal(rec.Body.Bytes(), &resp)
@@ -120,4 +128,3 @@ func TestSaveHandler(t *testing.T) {
 		})
 	}
 }
-

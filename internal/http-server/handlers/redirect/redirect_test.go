@@ -27,7 +27,7 @@ func TestRedirectHandler_EmptyAlias(t *testing.T) {
 
 	handler(rec, req)
 
-	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, http.StatusBadRequest, rec.Code)
 
 	var response resp.Response
 	err := json.Unmarshal(rec.Body.Bytes(), &response)
@@ -59,7 +59,7 @@ func TestRedirectHandler(t *testing.T) {
 			mockSetup: func(m *mocks.URLGetter) {
 				m.On("GetURL", "unknown").Return("", storage.ErrURLNotFound)
 			},
-			wantStatus: http.StatusOK,
+			wantStatus: http.StatusNotFound,
 			wantError:  "not found",
 		},
 		{
@@ -68,7 +68,7 @@ func TestRedirectHandler(t *testing.T) {
 			mockSetup: func(m *mocks.URLGetter) {
 				m.On("GetURL", "test").Return("", errors.New("db error"))
 			},
-			wantStatus: http.StatusOK,
+			wantStatus: http.StatusInternalServerError,
 			wantError:  "internal error",
 		},
 	}
