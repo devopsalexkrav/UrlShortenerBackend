@@ -26,11 +26,21 @@ func New(log *slog.Logger) func(next http.Handler) http.Handler {
 			t1 := time.Now()
 
 			defer func() {
-				entry.Info("request completed",
-					slog.Int("status", ww.Status()),
+				status := ww.Status()
+				attrs := []slog.Attr{
+					slog.Int("status", status),
 					slog.Int("bytes", ww.BytesWritten()),
 					slog.String("duration", time.Since(t1).String()),
-				)
+				}
+
+				switch {
+				case status >= 500:
+					entry.LogAttrs(r.Context(), slog.LevelError, "request completed", attrs...)
+				case status >= 400:
+					entry.LogAttrs(r.Context(), slog.LevelWarn, "request completed", attrs...)
+				default:
+					entry.LogAttrs(r.Context(), slog.LevelInfo, "request completed", attrs...)
+				}
 			}()
 
 			next.ServeHTTP(w, r)
