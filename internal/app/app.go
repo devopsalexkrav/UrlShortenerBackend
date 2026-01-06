@@ -6,6 +6,7 @@ import (
 	"urlShortener/internal/http-server/handlers/redirect"
 	"urlShortener/internal/http-server/handlers/url/delete"
 	"urlShortener/internal/http-server/handlers/url/save"
+	"urlShortener/internal/http-server/middleware/logger"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -27,6 +28,7 @@ func NewRouter(log *slog.Logger, storage Storage, user, password string) chi.Rou
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
+	router.Use(logger.New(log))
 
 	router.Route("/url", func(r chi.Router) {
 		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
@@ -41,4 +43,3 @@ func NewRouter(log *slog.Logger, storage Storage, user, password string) chi.Rou
 
 	return router
 }
-
