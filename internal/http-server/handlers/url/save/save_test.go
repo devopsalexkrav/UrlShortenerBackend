@@ -47,14 +47,14 @@ func TestSaveHandler(t *testing.T) {
 			wantStatus: "OK",
 		},
 		{
-			name: "url already exists",
+			name: "alias already exists",
 			body: `{"url": "https://google.com", "alias": "google"}`,
 			mockSetup: func(m *mocks.URLSaver) {
 				m.On("SaveURL", "https://google.com", "google").Return(int64(0), storage.ErrURLExists)
 			},
 			wantCode:   http.StatusConflict,
 			wantStatus: "Error",
-			wantError:  "url already exists",
+			wantError:  "alias already exists",
 		},
 		{
 			name: "save error",

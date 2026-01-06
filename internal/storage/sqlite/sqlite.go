@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"urlShortener/internal/storage"
 
 	_ "modernc.org/sqlite"
@@ -51,6 +52,9 @@ func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 
 	res, err := stmt.Exec(urlToSave, alias)
 	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return 0, storage.ErrURLExists
+		}
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
